@@ -1,19 +1,26 @@
 package com.enfint.CreditConveyer.service;
 
+import com.enfint.CreditConveyer.dto.CreditDTO;
 import com.enfint.CreditConveyer.dto.LoanApplicationRequestDTO;
 import com.enfint.CreditConveyer.dto.LoanOfferDTO;
+import com.enfint.CreditConveyer.dto.ScoringDataDTO;
 import com.enfint.CreditConveyer.exception.ApiException;
-import com.enfint.CreditConveyer.service.LoanOfferCalculation.OfferMonthlyInstallment;
-import com.enfint.CreditConveyer.service.ServiceInterface.OfferInterface;
-import com.enfint.CreditConveyer.service.LoanOfferCalculation.OfferRateCalculation;
+import com.enfint.CreditConveyer.model.PaymentScheduleElement;
+import com.enfint.CreditConveyer.service.Calculation.ConveyerRateCalculation;
+import com.enfint.CreditConveyer.service.Calculation.OfferMonthlyInstallment;
+import com.enfint.CreditConveyer.service.ServiceInterface.ParentInterface;
+import com.enfint.CreditConveyer.service.Calculation.OfferRateCalculation;
+import com.enfint.CreditConveyer.service.validation.ValidateScoringData;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -23,15 +30,17 @@ import java.util.stream.Stream;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class OfferService implements OfferInterface
+public class OfferAndCalculationService implements ParentInterface
 {
+
     @Override
     public List<LoanOfferDTO> offers(LoanApplicationRequestDTO requestDTO)
     {
-        log.info("Data validation");
+        log.info("Loan Offer Data validation");
         validateName(requestDTO.getFirstName());
         validateSurname(requestDTO.getLastName());
         validateEmail(requestDTO.getEmail());
+        validateTerm(requestDTO.getTerm());
         validateDatebirth(requestDTO.getBirthdate());
         validatePassportNumber(requestDTO.getPassportNumber());
         validatePassportSeries(requestDTO.getPassportSeries());
@@ -42,9 +51,76 @@ public class OfferService implements OfferInterface
                 createLoanOffer(new LoanOfferDTO(),true,false,requestDTO),
                 createLoanOffer(new LoanOfferDTO(),true,true,requestDTO)).collect(Collectors.toList());
     }
+    @Override
+    public CreditDTO calculationService(ScoringDataDTO scoringDataDTO)
+    {
+        ValidateScoringData.validate(scoringDataDTO);
+        log.info("Scoring data is validated");
+
+        log.info("Set values to the CreditDTO");
+
+        CreditDTO dto= new CreditDTO();
+        //let's re-use offerRateCalculation class and method
+        BigDecimal value=BigDecimal.valueOf(10);
+
+        OfferRateCalculation offerRateCalculation= new OfferRateCalculation(scoringDataDTO.isInsuranceEnabled(),scoringDataDTO.isSalaryClient(),value);
+
+        BigDecimal rate= ConveyerRateCalculation.scoringRate(offerRateCalculation.calculateRate(),scoringDataDTO);
+        OfferMonthlyInstallment monthlyInstallment= new OfferMonthlyInstallment(scoringDataDTO.getAmount(),scoringDataDTO.getTerm(),rate);
+
+        dto.setAmount(scoringDataDTO.getAmount());
+        dto.setTerm(scoringDataDTO.getTerm());
+        dto.setMonthlyPayment(monthlyInstallment.monthlyInstallment());
+        dto.setRate(rate);
+        dto.setPsk(monthlyInstallment.totalAmount());
+        dto.setPaymentSchedule(paymentSchedule(dto));
+        return dto;
+    }
+
+    public List<PaymentScheduleElement> paymentSchedule(CreditDTO dto)
+    {
+        List<PaymentScheduleElement> elements=new ArrayList<>();
+        final int number=0;
+        final LocalDate date=LocalDate.now();
+        final BigDecimal totalPayment=dto.getPsk();
+        final BigDecimal interestPayment=calculateInterest(dto);
+        final BigDecimal debtPayment=totalPayment.subtract(interestPayment);
+        final BigDecimal remainingDebt=totalPayment.subtract(debtPayment );
+
+        elements.add(new PaymentScheduleElement(number,date,totalPayment,interestPayment,debtPayment,remainingDebt));
+        log.info("Payment Schedule element{}",elements);
+        return elements;
+    }
+    protected DecimalFormat format;
+    public BigDecimal calculateInterest(CreditDTO dto) {
+        format=new DecimalFormat("0.00");
+        double interest=Double.valueOf(format.format(dto.getPsk().doubleValue()-dto.getAmount().doubleValue()));
+        log.info("Interest To Pay{}",interest);
+        return BigDecimal.valueOf(interest);
+    }
+
+    public void validateTerm(Integer term)
+    {
+        if(term==null)
+        {
+            throw new ApiException("Term is empty");
+        }
+        else
+        {
+            if(term<6)
+            {
+                throw new ApiException("Term must be greater than 6");
+            }
+            else if(term>=6)
+            {
+                log.info("Term is correct{}",term);
+            }
+        }
+
+    }
 
 
-    private void validatePassportNumber(String passportNumber)
+    public void validatePassportNumber(String passportNumber)
     {
         if(String.valueOf(passportNumber).equals("") || String.valueOf(passportNumber).isEmpty() || String.valueOf(passportNumber)==null)
         {
@@ -53,9 +129,9 @@ public class OfferService implements OfferInterface
         }
         else {
             //or we can use [0-9]+
-            if(Pattern.matches("[\\d]{4}",passportNumber))
+            if(Pattern.matches("[\\d]{6}",passportNumber))
             {
-               log.info("Passport number is Correct");
+               log.info("Passport number is Correct{}",passportNumber);
             }
             else
             {
@@ -64,7 +140,7 @@ public class OfferService implements OfferInterface
         }
     }
 
-    private void validatePassportSeries(String passportSeries) {
+    public void validatePassportSeries(String passportSeries) {
         if(String.valueOf(passportSeries).equals("") || String.valueOf(passportSeries).isEmpty() || String.valueOf(passportSeries)==null)
         {
 
@@ -73,9 +149,9 @@ public class OfferService implements OfferInterface
         else {
             //or we can use [0-9]+
             //String.valueOf(passportSeries).length()==6
-            if(Pattern.matches("[\\d]{6}",passportSeries))
+            if(Pattern.matches("[\\d]{4}",passportSeries))
             {
-                log.info("passport series is Correct");
+                log.info("passport series is Correct{}",passportSeries);
             }
             else
             {
@@ -84,14 +160,14 @@ public class OfferService implements OfferInterface
         }
     }
 
-    private void validateEmail(String email)
+    public void validateEmail(String email)
     {
         if(!email.isEmpty() || !email.equals("") || email!=null)
         {
             //on the email I used to avoid illegal escape character
             if(Pattern.matches("[\\w\\.]{2,50}@[\\w\\.]{2,20}",email))
             {
-                log.info("Email Is correct");
+                log.info("Email Is correct{}",email);
             }
             else
             {
@@ -104,7 +180,7 @@ public class OfferService implements OfferInterface
         }
     }
 
-    private void validateDatebirth(LocalDate birthdate)
+    public void validateDatebirth(LocalDate birthdate)
     {
       if(String.valueOf(birthdate)==null || String.valueOf(birthdate).equals("") || String.valueOf(birthdate).isEmpty())
       {
@@ -118,7 +194,7 @@ public class OfferService implements OfferInterface
           {
               simpleDateFormat=new SimpleDateFormat("YYYY-MM-DD");
               date=simpleDateFormat.parse(String.valueOf(birthdate));
-              log.info("Date is correct");
+              log.info("Date is correct{}",birthdate);
           }
           catch(Exception ex)
           {
@@ -137,7 +213,7 @@ public class OfferService implements OfferInterface
       }
     }
 
-    private void validateLoanAmount(BigDecimal amount)
+    public void validateLoanAmount(BigDecimal amount)
     {
         if(String.valueOf(amount).equals("") || String.valueOf(amount)==null || String.valueOf(amount).isEmpty())
         {
@@ -147,7 +223,7 @@ public class OfferService implements OfferInterface
         {
             if(amount.compareTo(BigDecimal.valueOf(10000))>0)
             {
-                log.info("Amount is correct");
+                log.info("Amount is correct{}",amount);
             }
             else
             {
@@ -156,7 +232,7 @@ public class OfferService implements OfferInterface
         }
     }
 
-    private void validateName(String firstName)
+    public void validateName(String firstName)
     {
         if(firstName.isEmpty() || firstName.equals("") || firstName==null)
         {
@@ -168,7 +244,7 @@ public class OfferService implements OfferInterface
             {
                 if(firstName.matches("^[a-zA-Z]*$"))
                 {
-                    log.info("First Name is correct");
+                    log.info("First Name is correct{}",firstName);
                 }
                 else
                 {
@@ -181,7 +257,7 @@ public class OfferService implements OfferInterface
             }
         }
     }
-    private void validateSurname(String lastName) {
+    public void validateSurname(String lastName) {
 
         if(lastName.isEmpty() || lastName.equals("") || lastName==null)
         {
@@ -193,7 +269,7 @@ public class OfferService implements OfferInterface
             {
                 if(lastName.matches("^[a-zA-Z]*$"))
                 {
-                    log.info("last Name is correct");
+                    log.info("last Name is correct{}",lastName);
                 }
                 else
                 {
@@ -210,6 +286,7 @@ public class OfferService implements OfferInterface
 
     private LoanOfferDTO createLoanOffer(LoanOfferDTO loanOfferDTO, boolean isInsuranceEnabled, boolean isSalaryClient, LoanApplicationRequestDTO requestDTO) {
 
+        log.info("Loan Offer created");
         BigDecimal value=BigDecimal.valueOf(10);
         OfferRateCalculation rateCalculation= new OfferRateCalculation(isInsuranceEnabled,isSalaryClient,value);
         OfferMonthlyInstallment offerMonthlyInstallment= new OfferMonthlyInstallment(requestDTO.getAmount(),requestDTO.getTerm(),rateCalculation.calculateRate());
@@ -224,7 +301,8 @@ public class OfferService implements OfferInterface
         loanOfferDTO.setSalaryClient(isSalaryClient);
         return  loanOfferDTO;
     }
-    private BigDecimal totalAmount(Integer term, BigDecimal monthInstallment) {
+    public BigDecimal totalAmount(Integer term, BigDecimal monthInstallment)
+    {
 
         log.info("Total Amount Of Money");
         return monthInstallment.multiply(BigDecimal.valueOf(term));

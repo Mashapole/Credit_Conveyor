@@ -15,6 +15,5 @@ public class CreditConveyerApplication {
 		SpringApplication.run(CreditConveyerApplication.class, args);
 		System.out.println("Credit Application Started");
 	}
-
 }
 

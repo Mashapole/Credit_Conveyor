@@ -1,4 +1,4 @@
-package com.enfint.CreditConveyer.service.LoanOfferCalculation;
+package com.enfint.CreditConveyer.service.Calculation;
 
 import java.math.BigDecimal;
 
@@ -31,22 +31,24 @@ public class OfferRateCalculation {
     public BigDecimal calculateRate()
     {
         BigDecimal rate;
-        if(isInsurance()==true)
-        {
-            rate=getDefaultValue().add(BigDecimal.valueOf(2));
-        }
-        else
+        if(isInsurance()!=true)
         {
             rate=getDefaultValue().subtract(BigDecimal.valueOf(4));
         }
-
-        if(isSalaryClient()==true)
+        else
         {
-            rate=getDefaultValue().add(BigDecimal.valueOf(3));
+            rate=getDefaultValue().add(BigDecimal.valueOf(2));
+
+        }
+
+        if(isSalaryClient()!=true)
+        {
+            rate=getDefaultValue().subtract(BigDecimal.valueOf(1));
+
         }
         else
         {
-            rate=getDefaultValue().subtract(BigDecimal.valueOf(1));
+            rate=getDefaultValue().add(BigDecimal.valueOf(3));
         }
         return rate;
     }

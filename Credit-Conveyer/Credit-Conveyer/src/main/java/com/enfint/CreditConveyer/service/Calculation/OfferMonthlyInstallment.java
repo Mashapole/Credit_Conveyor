@@ -1,4 +1,4 @@
-package com.enfint.CreditConveyer.service.LoanOfferCalculation;
+package com.enfint.CreditConveyer.service.Calculation;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;

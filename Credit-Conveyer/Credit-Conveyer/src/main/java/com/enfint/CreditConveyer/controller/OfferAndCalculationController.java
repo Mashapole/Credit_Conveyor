@@ -1,8 +1,10 @@
 package com.enfint.CreditConveyer.controller;
 
+import com.enfint.CreditConveyer.dto.CreditDTO;
 import com.enfint.CreditConveyer.dto.LoanApplicationRequestDTO;
 import com.enfint.CreditConveyer.dto.LoanOfferDTO;
-import com.enfint.CreditConveyer.service.OfferService;
+import com.enfint.CreditConveyer.dto.ScoringDataDTO;
+import com.enfint.CreditConveyer.service.OfferAndCalculationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,16 +15,23 @@ import java.util.List;
 
 @Slf4j
 @RestController
-public class OfferServiceController {
+public class OfferAndCalculationController {
 
     @Autowired
-    private OfferService offerService;
+    private OfferAndCalculationService services;
 
     @PostMapping("/loanOffers")
     public List<LoanOfferDTO> loanOffer(@RequestBody LoanApplicationRequestDTO requestDTO)
     {
         log.info("Loan Application Offer",requestDTO);
-        return offerService.offers(requestDTO);
+        return services.offers(requestDTO);
+    }
+
+    @PostMapping("/calc")
+    public CreditDTO calculationService(@RequestBody ScoringDataDTO scoringDataDTO)
+    {
+        log.info("Calculation has started{}",scoringDataDTO);
+        return services.calculationService(scoringDataDTO);
     }
 
 
