@@ -1,7 +1,7 @@
 package com.enfint.CreditConveyer.dto;
 
-import com.enfint.CreditConveyer.dto.ModelEnum.Gender;
-import com.enfint.CreditConveyer.dto.ModelEnum.MaritalStatus;
+import com.enfint.CreditConveyer.dto.modelenum.Gender;
+import com.enfint.CreditConveyer.dto.modelenum.MaritalStatus;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;

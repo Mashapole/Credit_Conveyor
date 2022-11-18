@@ -1,7 +1,7 @@
 package com.enfint.CreditConveyer.dto;
 
-import com.enfint.CreditConveyer.dto.ModelEnum.EmploymentStatus;
-import com.enfint.CreditConveyer.dto.ModelEnum.Position;
+import com.enfint.CreditConveyer.dto.modelenum.EmploymentStatus;
+import com.enfint.CreditConveyer.dto.modelenum.Position;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;

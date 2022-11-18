@@ -3,16 +3,15 @@ package com.enfint.CreditConveyer.service;
 import com.enfint.CreditConveyer.dto.EmploymentDTO;
 import com.enfint.CreditConveyer.dto.LoanApplicationRequestDTO;
 import com.enfint.CreditConveyer.dto.LoanOfferDTO;
-import com.enfint.CreditConveyer.dto.ModelEnum.EmploymentStatus;
-import com.enfint.CreditConveyer.dto.ModelEnum.Gender;
-import com.enfint.CreditConveyer.dto.ModelEnum.MaritalStatus;
-import com.enfint.CreditConveyer.dto.ModelEnum.Position;
+import com.enfint.CreditConveyer.dto.modelenum.EmploymentStatus;
+import com.enfint.CreditConveyer.dto.modelenum.Gender;
+import com.enfint.CreditConveyer.dto.modelenum.MaritalStatus;
+import com.enfint.CreditConveyer.dto.modelenum.Position;
 import com.enfint.CreditConveyer.dto.ScoringDataDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -68,26 +67,6 @@ class OfferAndCalculationServiceTest {
 
     }
 
-    @Test
-    void validateName()
-    {
-        assertTrue(dto.getFirstName().matches("[a-zA-Z]{2,30}"));
-    }
-    @Test
-    void validatePassportNumber()
-    {
-        assertTrue(dto.getPassportNumber().matches("[\\d]{6}"));
-    }
-
-    @Test
-    void validatePassportSeries() {
-        assertTrue(dto.getPassportSeries().matches("[\\d]{4}"));
-    }
-
-    @Test
-    void validateSurname() {
-        assertTrue(dto.getLastName().matches("[a-zA-Z]{2,30}"));
-    }
 
     @Test
     void offers()

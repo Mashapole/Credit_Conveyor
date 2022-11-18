@@ -4,26 +4,21 @@ import com.enfint.CreditConveyer.dto.CreditDTO;
 import com.enfint.CreditConveyer.dto.LoanApplicationRequestDTO;
 import com.enfint.CreditConveyer.dto.LoanOfferDTO;
 import com.enfint.CreditConveyer.dto.ScoringDataDTO;
-import com.enfint.CreditConveyer.exception.ApiException;
 import com.enfint.CreditConveyer.model.PaymentScheduleElement;
 import com.enfint.CreditConveyer.service.Calculation.ConveyerRateCalculation;
 import com.enfint.CreditConveyer.service.Calculation.OfferMonthlyInstallment;
 import com.enfint.CreditConveyer.service.ServiceInterface.ParentInterface;
 import com.enfint.CreditConveyer.service.Calculation.OfferRateCalculation;
-import com.enfint.CreditConveyer.service.validation.ValidateScoringData;
+import com.enfint.CreditConveyer.validate.validate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.time.Period;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -33,28 +28,48 @@ import java.util.stream.Stream;
 public class OfferAndCalculationService implements ParentInterface
 {
 
+
     @Override
     public List<LoanOfferDTO> offers(LoanApplicationRequestDTO requestDTO)
     {
         log.info("Loan Offer Data validation");
-        validateName(requestDTO.getFirstName());
-        validateSurname(requestDTO.getLastName());
-        validateEmail(requestDTO.getEmail());
-        validateTerm(requestDTO.getTerm());
-        validateDatebirth(requestDTO.getBirthdate());
-        validatePassportNumber(requestDTO.getPassportNumber());
-        validatePassportSeries(requestDTO.getPassportSeries());
-        validateLoanAmount(requestDTO.getAmount());
+        validateOffer(requestDTO);
         log.info("Create Loan Offer Using Stream");
         return Stream.of(createLoanOffer(new LoanOfferDTO(),false,false,requestDTO),
                 createLoanOffer(new LoanOfferDTO(),false,true,requestDTO),
                 createLoanOffer(new LoanOfferDTO(),true,false,requestDTO),
                 createLoanOffer(new LoanOfferDTO(),true,true,requestDTO)).collect(Collectors.toList());
     }
+
+    public static void validateOffer(LoanApplicationRequestDTO reg)
+    {
+        validate v= new validate();
+        log.info("---------------------------------");
+        log.info("Offer Data Validation");
+        if(!v.checkAmount(reg.getAmount()));
+
+        if(!v.checkTerm(reg.getTerm()));
+
+        if(!v.checkFirstName(reg.getFirstName()));
+
+        if(!v.checkLastName(reg.getLastName()));
+
+        if(!v.checkEmail(reg.getEmail()));
+
+        if(!v.checkBirthdate(reg.getBirthdate()));
+
+        if(!v.checkPassportSeries(reg.getPassportSeries()));
+
+        if(!v.checkPassportNumber(reg.getPassportNumber()));
+        log.info("---------------------------------");
+        log.info("Data Validated");
+        log.info("---------------------------------");
+    }
+
     @Override
     public CreditDTO calculationService(ScoringDataDTO scoringDataDTO)
     {
-        ValidateScoringData.validate(scoringDataDTO);
+        validateScoring(scoringDataDTO);
         log.info("Scoring data is validated");
 
         log.info("Set values to the CreditDTO");
@@ -77,6 +92,36 @@ public class OfferAndCalculationService implements ParentInterface
         return dto;
     }
 
+    private void validateScoring(ScoringDataDTO reg)
+    {
+        validate v= new validate();
+        log.info("---------------------------------");
+        log.info("Scoring Data Validation");
+        if(!v.checkAmount(reg.getAmount()));
+        if(!v.checkTerm(reg.getTerm()));
+        if(!v.checkFirstName(reg.getFirstName()));
+        if(!v.checkLastName(reg.getLastName()));
+        if(!v.checkGender(reg.getGender()));
+        if(!v.checkBirthdate(reg.getBirthdate()));
+        if(!v.checkPassportSeries(reg.getPassportSeries()));
+        if(!v.checkPassportNumber(reg.getPassportNumber()));
+        if(!v.checkPassportIssueDate(reg.getPassportIssueDate()));
+        if(!v.checkPassportBranch(reg.getPassportIssueBranch()));
+        if(!v.checkMaritalStatus(reg.getMaritalStatus()));
+        if(!v.checkDependentAmount(reg.getDependentAmount()));
+        if(!v.checkEmploymentStatus(reg.getEmployment().getEmploymentStatus()));
+        if(!v.checkValidAccount(reg.getAccount()));
+        if(!v.checkEmployment(reg.getEmployment()));
+        if(!v.checkINN(reg.getEmployment().getEmployerINN()));
+        if(!v.checkSalary(reg.getEmployment().getSalary()));
+        if(!v.checkPosition(reg.getEmployment().getPosition()));
+        if(!v.checkWorkExprience(reg.getEmployment().getWorkExperienceTotal()));
+        if(!v.checkCurrentWorkExprience(reg.getEmployment().getGetWorkExperienceCurrent()));
+        log.info("---------------------------------");
+        log.info("Data Validated");
+        log.info("---------------------------------");
+    }
+
     public List<PaymentScheduleElement> paymentSchedule(CreditDTO dto)
     {
         List<PaymentScheduleElement> elements=new ArrayList<>();
@@ -91,199 +136,15 @@ public class OfferAndCalculationService implements ParentInterface
         log.info("Payment Schedule element{}",elements);
         return elements;
     }
-    protected DecimalFormat format;
-    public BigDecimal calculateInterest(CreditDTO dto) {
+
+    private DecimalFormat format;
+    public BigDecimal calculateInterest(CreditDTO dto)
+    {
         format=new DecimalFormat("0.00");
         double interest=Double.valueOf(format.format(dto.getPsk().doubleValue()-dto.getAmount().doubleValue()));
         log.info("Interest To Pay{}",interest);
         return BigDecimal.valueOf(interest);
     }
-
-    public void validateTerm(Integer term)
-    {
-        if(term==null)
-        {
-            throw new ApiException("Term is empty");
-        }
-        else
-        {
-            if(term<6)
-            {
-                throw new ApiException("Term must be greater than 6");
-            }
-            else if(term>=6)
-            {
-                log.info("Term is correct{}",term);
-            }
-        }
-
-    }
-
-
-    public void validatePassportNumber(String passportNumber)
-    {
-        if(String.valueOf(passportNumber).equals("") || String.valueOf(passportNumber).isEmpty() || String.valueOf(passportNumber)==null)
-        {
-
-            throw new ApiException("Passport number is required");
-        }
-        else {
-            //or we can use [0-9]+
-            if(Pattern.matches("[\\d]{6}",passportNumber))
-            {
-               log.info("Passport number is Correct{}",passportNumber);
-            }
-            else
-            {
-                throw new ApiException("Passport number is incorrect");
-            }
-        }
-    }
-
-    public void validatePassportSeries(String passportSeries) {
-        if(String.valueOf(passportSeries).equals("") || String.valueOf(passportSeries).isEmpty() || String.valueOf(passportSeries)==null)
-        {
-
-            throw new ApiException("passport series number is required");
-        }
-        else {
-            //or we can use [0-9]+
-            //String.valueOf(passportSeries).length()==6
-            if(Pattern.matches("[\\d]{4}",passportSeries))
-            {
-                log.info("passport series is Correct{}",passportSeries);
-            }
-            else
-            {
-                throw new ApiException("passport series is incorrect");
-            }
-        }
-    }
-
-    public void validateEmail(String email)
-    {
-        if(!email.isEmpty() || !email.equals("") || email!=null)
-        {
-            //on the email I used to avoid illegal escape character
-            if(Pattern.matches("[\\w\\.]{2,50}@[\\w\\.]{2,20}",email))
-            {
-                log.info("Email Is correct{}",email);
-            }
-            else
-            {
-                throw new ApiException("Email is not in correct format");
-
-            }
-        }
-        else {
-            throw new ApiException("Email is required");
-        }
-    }
-
-    public void validateDatebirth(LocalDate birthdate)
-    {
-      if(String.valueOf(birthdate)==null || String.valueOf(birthdate).equals("") || String.valueOf(birthdate).isEmpty())
-      {
-          throw new ApiException("date of birth is required");
-      }
-      else {
-          Date date;
-          SimpleDateFormat simpleDateFormat;
-
-          try
-          {
-              simpleDateFormat=new SimpleDateFormat("YYYY-MM-DD");
-              date=simpleDateFormat.parse(String.valueOf(birthdate));
-              log.info("Date is correct{}",birthdate);
-          }
-          catch(Exception ex)
-          {
-              log.info("Error: "+ex.toString());
-              throw new ApiException("Date of birth is in wrong format-required(yyyy-mm-dd)");
-          }
-
-          if(Period.between(birthdate, LocalDate.now()).getYears()>=18)
-          {
-              log.info("Age is Correct");
-          }
-          else {
-              throw new ApiException("Age must be greater than 18");
-          }
-
-      }
-    }
-
-    public void validateLoanAmount(BigDecimal amount)
-    {
-        if(String.valueOf(amount).equals("") || String.valueOf(amount)==null || String.valueOf(amount).isEmpty())
-        {
-            throw new ApiException("Amount is required");
-        }
-        else
-        {
-            if(amount.compareTo(BigDecimal.valueOf(10000))>0)
-            {
-                log.info("Amount is correct{}",amount);
-            }
-            else
-            {
-                throw new ApiException("Amount it muss be greater tha 10 000");
-            }
-        }
-    }
-
-    public void validateName(String firstName)
-    {
-        if(firstName.isEmpty() || firstName.equals("") || firstName==null)
-        {
-            throw new ApiException("first name required.");
-        }
-        else
-        {
-            if(firstName.length()>2 && firstName.length()<30)
-            {
-                if(firstName.matches("^[a-zA-Z]*$"))
-                {
-                    log.info("First Name is correct{}",firstName);
-                }
-                else
-                {
-                    throw new ApiException("First Name format is incorrect");
-                }
-            }
-            else
-            {
-                throw new ApiException("Length of first name must be between 2-30");
-            }
-        }
-    }
-    public void validateSurname(String lastName) {
-
-        if(lastName.isEmpty() || lastName.equals("") || lastName==null)
-        {
-            throw new ApiException("last name required.");
-        }
-        else
-        {
-            if(lastName.length()>2 && lastName.length()<30)
-            {
-                if(lastName.matches("^[a-zA-Z]*$"))
-                {
-                    log.info("last Name is correct{}",lastName);
-                }
-                else
-                {
-                    throw new ApiException("last Name format is incorrect");
-                }
-            }
-            else
-            {
-                throw new ApiException("Length of last name must be between 2-30");
-            }
-        }
-    }
-
-
     private LoanOfferDTO createLoanOffer(LoanOfferDTO loanOfferDTO, boolean isInsuranceEnabled, boolean isSalaryClient, LoanApplicationRequestDTO requestDTO) {
 
         log.info("Loan Offer created");
@@ -301,10 +162,5 @@ public class OfferAndCalculationService implements ParentInterface
         loanOfferDTO.setSalaryClient(isSalaryClient);
         return  loanOfferDTO;
     }
-    public BigDecimal totalAmount(Integer term, BigDecimal monthInstallment)
-    {
 
-        log.info("Total Amount Of Money");
-        return monthInstallment.multiply(BigDecimal.valueOf(term));
-    }
 }

@@ -22,14 +22,14 @@ public class OfferAndCalculationController {
     @Autowired
     private OfferAndCalculationService services;
 
-    @PostMapping("/loanOffers")
+    @PostMapping("/offers")
     public List<LoanOfferDTO> loanOffer(@RequestBody LoanApplicationRequestDTO requestDTO)
     {
         log.info("Loan Application Offer",requestDTO);
         return services.offers(requestDTO);
     }
 
-    @PostMapping("/calc")
+    @PostMapping("/calculation")
     public CreditDTO calculationService(@RequestBody ScoringDataDTO scoringDataDTO)
     {
         log.info("Calculation has started{}",scoringDataDTO);
