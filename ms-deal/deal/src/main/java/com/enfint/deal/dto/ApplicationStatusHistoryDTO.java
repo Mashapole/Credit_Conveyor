@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 @Data
 @Setter
 @Getter
-@NoArgsConstructor
 @AllArgsConstructor
 public class ApplicationStatusHistoryDTO {
 
