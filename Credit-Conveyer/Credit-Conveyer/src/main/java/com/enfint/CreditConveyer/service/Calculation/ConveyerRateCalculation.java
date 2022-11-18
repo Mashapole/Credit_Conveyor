@@ -1,10 +1,10 @@
 package com.enfint.CreditConveyer.service.Calculation;
 
 
-import com.enfint.CreditConveyer.dto.ModelEnum.EmploymentStatus;
-import com.enfint.CreditConveyer.dto.ModelEnum.Gender;
-import com.enfint.CreditConveyer.dto.ModelEnum.MaritalStatus;
-import com.enfint.CreditConveyer.dto.ModelEnum.Position;
+import com.enfint.CreditConveyer.dto.modelenum.EmploymentStatus;
+import com.enfint.CreditConveyer.dto.modelenum.Gender;
+import com.enfint.CreditConveyer.dto.modelenum.MaritalStatus;
+import com.enfint.CreditConveyer.dto.modelenum.Position;
 import com.enfint.CreditConveyer.dto.ScoringDataDTO;
 import com.enfint.CreditConveyer.exception.ApiException;
 import lombok.extern.slf4j.Slf4j;

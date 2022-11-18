@@ -1,4 +1,4 @@
-package com.enfint.CreditConveyer.dto.ModelEnum;
+package com.enfint.CreditConveyer.dto.modelenum;
 
 public enum MaritalStatus {
     MARRIED, DIVORCED;
