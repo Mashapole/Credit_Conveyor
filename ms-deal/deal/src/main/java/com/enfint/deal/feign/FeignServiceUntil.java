@@ -10,6 +10,6 @@ import java.util.List;
 
 @FeignClient(value="clientData",url="http://localhost:8080/conveyer")
 public interface FeignServiceUntil {
-    @PostMapping("/loanOffers")
+    @PostMapping("/offers")
     List<LoanOfferDTO> offers(@RequestBody LoanApplicationRequestDTO loanApplicationRequestDTO);
 }
