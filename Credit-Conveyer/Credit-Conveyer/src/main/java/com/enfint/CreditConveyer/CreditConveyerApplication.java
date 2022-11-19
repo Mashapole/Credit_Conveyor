@@ -9,9 +9,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @SpringBootApplication
-@ComponentScan
 @Slf4j
 public class CreditConveyerApplication {
+
 
 	public static void main(String[] args) {
 		SpringApplication.run(CreditConveyerApplication.class, args);
