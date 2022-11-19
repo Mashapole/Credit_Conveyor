@@ -130,11 +130,26 @@ public class OfferAndCalculationService implements ParentInterface
         final BigDecimal totalPayment=dto.getPsk();
         final BigDecimal interestPayment=calculateInterest(dto);
         final BigDecimal debtPayment=totalPayment.subtract(interestPayment);
-        final BigDecimal remainingDebt=totalPayment.subtract(debtPayment );
+        final BigDecimal remainingDebt=outstandingBalance(totalPayment,interestPayment,dto.getRate(),dto.getTerm(), dto.getMonthlyPayment());
 
         elements.add(new PaymentScheduleElement(number,date,totalPayment,interestPayment,debtPayment,remainingDebt));
         log.info("Payment Schedule element{}",elements);
         return elements;
+    }
+
+    private BigDecimal outstandingBalance(BigDecimal totalPayment, BigDecimal interestPayment, BigDecimal rate, Integer term, BigDecimal monthlyPayment) {
+        //let's say user paid loan for 4 years
+
+        int getTerm =(term-4)*12;
+        double countMonth=0;
+
+        for(int i=0;i<getTerm;i++)
+        {
+            countMonth+=monthlyPayment.doubleValue();
+        }
+
+        double balance=totalPayment.doubleValue()-countMonth;
+        return BigDecimal.valueOf(balance);
     }
 
     private DecimalFormat format;
