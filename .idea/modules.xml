@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/CreaditConveyer/CreaditConveyer/CreaditConveyer.iml" filepath="$PROJECT_DIR$/CreaditConveyer/CreaditConveyer/CreaditConveyer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/Credit_Conveyor.iml" filepath="$PROJECT_DIR$/.idea/Credit_Conveyor.iml" />
+    </modules>
+  </component>
+</project>
